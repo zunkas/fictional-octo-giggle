@@ -10,6 +10,7 @@ env:
   AZURE_WEBAPP_PACKAGE_PATH: '.'
   Configuration: Release
   dotnetVersion: '5.x.x'  # SDK Version to use; x will use the latest version of the 5.0 channel
+  slnPath: src/fictional-octo-giggle.sln
 
 jobs:  
   variables:
@@ -104,75 +105,77 @@ jobs:
   #      SwedbankPay:ApiBaseUrl: https://api.externalintegration.payex.com
   #      SwedbankPay:Sdk:SampleWebsite:BaseUrl: https://localhost:5001
 
-  #test_nuget_package:
-  #  runs-on: ubuntu-20.04
-  #  if: >
-  #    ${{ github.event.workflow_run.conclusion == 'success' }}
-  #  needs: [variables]
+  test_nuget_package:
+    runs-on: ubuntu-latest
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: [variables]
 
-  #  steps:
-  #  - uses: actions/checkout@v2
-  #    if: ${{ github.event.workflow_run.event != 'pull_request_target' }}
-  #    with:
-  #      fetch-depth: 0
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout
+      if: ${{ github.event.workflow_run.event != 'pull_request_target' }}
+      with:
+        fetch-depth: 0
 
-  #  - uses: actions/checkout@v2
-  #    if: ${{ github.event.workflow_run.event == 'pull_request_target' }}
-  #    with:
-  #      fetch-depth: 0
-  #      ref: ${{ github.event.pull_request.head.sha }}
+    - uses: actions/checkout@v2
+      name: Checkout pull request target
+      if: ${{ github.event.workflow_run.event == 'pull_request_target' }}
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.sha }}
 
-  #  - uses: gittools/actions/gitversion/setup@v0.9.11
-  #    with:
-  #      versionSpec: '5.x.x'
+    - uses: gittools/actions/gitversion/setup@v0.9.11
+      with:
+        versionSpec: '5.x.x'
 
-  #  - uses: gittools/actions/gitversion/execute@v0.9.11
-  #    id: gitversion # step id used as reference for output values
-  #    with:
-  #      updateAssemblyInfo: true
+    - uses: gittools/actions/gitversion/execute@v0.9.11
+      id: gitversion # step id used as reference for output values
+      with:
+        updateAssemblyInfo: true
 
-  #  - name: Install dependencies
-  #    run: dotnet restore ./src/SwedbankPay.Sdk.sln
+    - name: Install dependencies
+      run: dotnet restore ./src/SwedbankPay.Sdk.sln
 
-  #  - uses: actions/setup-dotnet@v1
-  #    with:
-  #      dotnet-version: ${{ env.dotnetVersion }}
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.dotnetVersion }}
 
-  #  - name: Build solution
-  #    run: dotnet build ./src/SwedbankPay.Sdk.sln
+    - name: Build solution
+      run: dotnet build ${{ env.slnPath }}
 
-  #  - name: Create test NuGet package
-  #    env:
-  #      SLN_FILE: src/SwedbankPay.Sdk.sln
-  #      VERSION_NUMBER: ${{ steps.gitversion.outputs.FULLSEMVER }}
-  #      NUGET_KEY: not-needed
-  #      DEBUG: true
-  #    run: .github/workflows/nuget_push.sh
+    - name: Create test NuGet package
+      env:
+        SLN_FILE: ${{ env.slnPath }}
+        VERSION_NUMBER: ${{ steps.gitversion.outputs.FULLSEMVER }}
+        NUGET_KEY: not-needed
+        DEBUG: true
+      run: .github/workflows/nuget_push.sh
 
-  #  - name: Publish test package to GitHub Package Registry
-  #    run: dotnet nuget push "nugets/*.nupkg" --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/SwedbankPay/index.json --skip-duplicate
+    - name: Publish test package to GitHub Package Registry
+      run: dotnet nuget push "nugets/*.nupkg" --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/zunkas/index.json --skip-duplicate
 
-  #  - name: Publish test symbol package to GitHub Package Registry
-  #    run: dotnet nuget push "nugets/*.snupkg" --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/SwedbankPay/index.json --skip-duplicate
+    - name: Publish test symbol package to GitHub Package Registry
+      run: dotnet nuget push "nugets/*.snupkg" --api-key ${{secrets.GITHUB_TOKEN}} --source https://nuget.pkg.github.com/zunkas/index.json --skip-duplicate
 
-  #  - name: Setup nuget config
-  #    run: awk '{gsub("GITHUB_USER", "${{ github.actor }}"); print}' NuGet.template.config | awk '{gsub("GITHUB_TOKEN", "${{ secrets.GITHUB_TOKEN }}"); print}' $1 | tee NuGet.Config
-  #    working-directory: src/SwedbankPay.Sdk.TestNuget
+    - name: Setup nuget config
+      run: awk '{gsub("GITHUB_USER", "${{ github.actor }}"); print}' NuGet.template.config | awk '{gsub("GITHUB_TOKEN", "${{ secrets.GITHUB_TOKEN }}"); print}' $1 | tee NuGet.Config
+      working-directory: src/SwedbankPay.Sdk.TestNuget
 
-  #  - name: Print nuget config
-  #    run: cat src/SwedbankPay.Sdk.TestNuget/NuGet.Config
+    - name: Print nuget config
+      run: cat src/SwedbankPay.Sdk.TestNuget/NuGet.Config
 
-  #  - name: Test install of package
-  #    env:
-  #      PROJECT_FILE: src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
-  #      VERSION_NUMBER: ${{ steps.gitversion.outputs.FULLSEMVER }}
-  #    run: .github/workflows/nuget_install.sh
+    - name: Test install of package
+      env:
+        PROJECT_FILE: src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
+        VERSION_NUMBER: ${{ steps.gitversion.outputs.FULLSEMVER }}
+      run: .github/workflows/nuget_install.sh
 
-  #  - name: Print csproj
-  #    run: cat src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
+    - name: Print csproj
+      run: cat src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
 
-  #  - name: Build SwedbankPay.Sdk.TestNuget
-  #    run: dotnet build src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
+    - name: Build SwedbankPay.Sdk.TestNuget
+      run: dotnet build src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
 
   #publish:
   #  runs-on: ubuntu-20.04
