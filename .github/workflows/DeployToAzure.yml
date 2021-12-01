@@ -17,6 +17,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    name: 'Deploy to ${{ inputs.ENVIRONMENT }}'
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
@@ -29,14 +30,3 @@ jobs:
     #    app-name: ${{ inputs.AZURE_WEBAPP_NAME }} # Replace with your app name
     #    publish-profile: ${{ secrets.azurePublishProfile }} # Define secret variable in repository settings as per action documentation
     #    package: ${{ inputs.packageName }}
-
-    - name: print stuff
-      run: |
-        echo "packageName is  ${{ inputs.packageName }}"
-        echo "azureWebAppName is ${{ secrets.azureWebAppName}}"
-        echo "azurePublishProfile is ${{ secrets.azurePublishProfile}}"
-
-    - name: print stuff2
-      run : |
-        echo 'printing envs'
-        env        
