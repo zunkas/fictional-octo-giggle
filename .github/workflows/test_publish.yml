@@ -183,7 +183,7 @@ jobs:
     #  run: dotnet build src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
 
   publish:
-    if: ${{ github.event.workflow_run.event != 'pull_request' || startsWith(github.ref, 'refs/heads/develop') }}
+    if: ${{ github.event.workflow_run.event == 'push' && (startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/feature') || startsWith(github.ref, 'refs/heads/release') || startsWith(github.ref, 'refs/heads/hotfix') || startsWith(github.ref, 'refs/tags/')) }}
     needs: [variables, test]
     uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure.yml@develop
     name: 'Deploy to ${{ needs.variables.outputs.ENVIRONMENT }}'
@@ -195,7 +195,7 @@ jobs:
       azurePublishProfile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
  
   publishToNuget:
-    needs: [variables, test]  
+    needs: [variables, test, publish]  
     if: ${{ github.event.workflow_run.event != 'pull_request' || startsWith(github.ref, 'refs/heads/develop') }}
     environment: ${{ needs.variables.outputs.ENVIRONMENT }}   
     runs-on: ubuntu-latest
