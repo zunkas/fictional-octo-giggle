@@ -183,26 +183,29 @@ jobs:
     #  run: dotnet build src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
 
   publish:
-    runs-on: ubuntu-latest
     if: >
       ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_runt.event != 'pull_request'}}
     needs: [variables, test_nuget_package]
+    uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure@main
+    name: 'Run Azure webapp deploy to ${{ needs.variables.outputs.ENVIRONMENT }} using publish profile credentials'
+    with:
+      environment: ${{ needs.variables.outputs.ENVIRONMENT }}
+      packageName: 'Sample.AspNetCore'
+    secrets:
+      azureWebAppName: ${{ secrets.AZURE_WEBAPP_NAME }}
+      azurePublishProfile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+ 
 
-    steps:
-    #- name: Checkout
-    #  uses: actions/checkout@v2
 
-    - name: Download All artifacts
-      uses: actions/download-artifact@v2
 
-    - uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure@main
-      name: 'Run Azure webapp deploy to ${{ needs.variables.outputs.ENVIRONMENT }} using publish profile credentials'
-      with:
-        environment: ${{ needs.variables.outputs.ENVIRONMENT }}
-        packageName: 'Sample.AspNetCore'
-      secrets:
-        azureWebAppName: ${{ secrets.AZURE_WEBAPP_NAME }}
-        azurePublishProfile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+    #steps:
+    ##- name: Checkout
+    ##  uses: actions/checkout@v2
+
+    #- name: Download All artifacts
+    #  uses: actions/download-artifact@v2
+
+
    
 
     #- name: Publish to NuGet
