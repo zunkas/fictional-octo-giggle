@@ -24,7 +24,6 @@ jobs:
       FULLSEMVER:  ${{ steps.gitversion.outputs.fullSemVer }}
 
     steps:
-      - uses: haya14busa/action-workflow_run-status@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
