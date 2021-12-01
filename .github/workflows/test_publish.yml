@@ -9,7 +9,7 @@ on:
 env:
   AZURE_WEBAPP_PACKAGE_PATH: '.'
   Configuration: Release
-  dotnetVersion: '6.x.x'  # SDK Version to use; x will use the latest version of the 6.0 channel
+  dotnetVersion: '6.x'  # SDK Version to use; x will use the latest version of the 6.0 channel
   slnPath: src/fictional-octo-giggle.sln
 
 jobs:  
@@ -20,7 +20,6 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       ENVIRONMENT: ${{ steps.setoutputvariables.outputs.ENVIRONMENT }}
-      AZURE_WEBAPP_NAME: ${{ steps.setoutputvariables.outputs.AZURE_WEBAPP_NAME }}
       NUGETVERSIONV2: ${{ steps.gitversion.outputs.nuGetVersionV2 }}
       FULLSEMVER:  ${{ steps.gitversion.outputs.fullSemVer }}
 
@@ -38,72 +37,67 @@ jobs:
         id: gitversion # step id used as reference for output values
         uses: gittools/actions/gitversion/execute@v0.9.11
 
-      - name: Set dev environment variables
+      - name: Set dev environment variable
         uses: allenevans/set-env@v2.1.0
         if: ${{ startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/feature/') || startsWith(github.ref, 'refs/heads/dependabot/') || github.event_name == 'pull_request_target' }} # deveop, featurebranches and pullrequests
         with:
-          ENVIRONMENT: dev
-          AZURE_WEBAPP_NAME: swedbankpay-sdk-001-dev
+          ENVIRONMENT: dev          
 
-      - name: Set uat environment variables
+      - name: Set uat environment variable
         uses: allenevans/set-env@v2.1.0
         if: ${{ startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/hotfix/') || contains(github.ref, '-beta')}}
         with:
           ENVIRONMENT: uat
-          AZURE_WEBAPP_NAME: swedbankpay-sdk-001-uat
 
-      - name: Set pro environment variables
+      - name: Set pro environment variable
         uses: allenevans/set-env@v2.1.0
         if: ${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'refs/tags/*-*') }}
         with:
           ENVIRONMENT: pro
-          AZURE_WEBAPP_NAME: swedbankpay-sdk-001-pro
 
       - id: setoutputvariables
         name: Set output variables
         run: |
             echo "::set-output name=ENVIRONMENT::${ENVIRONMENT}"
-            echo "::set-output name=AZURE_WEBAPP_NAME::${AZURE_WEBAPP_NAME}"
 
-  #test:
-  #  runs-on: ubuntu-20.04
-  #  if: >
-  #    ${{ github.event.workflow_run.conclusion == 'success' }}
+  test:
+    runs-on: ubuntu-latest
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' }}
 
-  #  steps:
-  #  - uses: actions/checkout@v2
-  #    if: ${{ github.event.workflow_run.event != 'pull_request_target' }}
+    steps:
+    - name: Checkout
+      if: ${{ github.event.workflow_run.event != 'pull_request_target' }}  
+      uses: actions/checkout@v2
+      
+    - name: Checkout pull request target
+      if: ${{ github.event.workflow_run.event == 'pull_request_target' }}  
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
 
-  #  - uses: actions/checkout@v2
-  #    if: ${{ github.event.workflow_run.event == 'pull_request_target' }}
-  #    with:
-  #      ref: ${{ github.event.pull_request.head.sha }}
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.dotnetVersion }}
 
-  #  - uses: actions/setup-dotnet@v1
-  #    with:
-  #      dotnet-version: '5.0.x' # SDK Version to use; x will use the latest version of the 5.0 channel
+    #- name: Run SDK Unit Tests
+    #  run: dotnet test src/SwedbankPay.Sdk.Tests/SwedbankPay.Sdk.Tests.csproj
 
-  #  - name: Download All artifacts
-  #    uses: actions/download-artifact@v2
+    #- name: Run SDK Integration Tests
+    #  run: dotnet test src/SwedbankPay.Sdk.IntegrationTests/SwedbankPay.Sdk.IntegrationTests.csproj
+    #  env:
+    #    SwedbankPay:Token: ${{ secrets.MERCHANT_TOKEN }}
+    #    SwedbankPay:TokenMobilePay: ${{ secrets.MERCHANT_TOKEN_MOBILE_PAY }}
+    #    SwedbankPay:PayeeId: ${{ secrets.MERCHANT_PAYEEID }}
 
-  #  - name: Run SDK Unit Tests
-  #    run: dotnet test src/SwedbankPay.Sdk.Tests/SwedbankPay.Sdk.Tests.csproj
-
-  #  - name: Run SDK Integration Tests
-  #    run: dotnet test src/SwedbankPay.Sdk.IntegrationTests/SwedbankPay.Sdk.IntegrationTests.csproj
-  #    env:
-  #      SwedbankPay:Token: ${{ secrets.MERCHANT_TOKEN }}
-  #      SwedbankPay:TokenMobilePay: ${{ secrets.MERCHANT_TOKEN_MOBILE_PAY }}
-  #      SwedbankPay:PayeeId: ${{ secrets.MERCHANT_PAYEEID }}
-
-  #  - name: Run SDK Sample project tests
-  #    run: dotnet test  src/Samples/Sample.AspNetCore.SystemTests/Sample.AspNetCore.SystemTests.csproj -v n
-  #    env:
-  #      SwedbankPay:Token: ${{ secrets.MERCHANT_TOKEN }}
-  #      SwedbankPay:TokenMobilePay: ${{ secrets.MERCHANT_TOKEN_MOBILE_PAY }}
-  #      SwedbankPay:PayeeId: ${{ secrets.MERCHANT_PAYEEID }}
-  #      SwedbankPay:ApiBaseUrl: https://api.externalintegration.payex.com
-  #      SwedbankPay:Sdk:SampleWebsite:BaseUrl: https://localhost:5001
+    #- name: Run SDK Sample project tests
+    #  run: dotnet test  src/Samples/Sample.AspNetCore.SystemTests/Sample.AspNetCore.SystemTests.csproj -v n
+    #  env:
+    #    SwedbankPay:Token: ${{ secrets.MERCHANT_TOKEN }}
+    #    SwedbankPay:TokenMobilePay: ${{ secrets.MERCHANT_TOKEN_MOBILE_PAY }}
+    #    SwedbankPay:PayeeId: ${{ secrets.MERCHANT_PAYEEID }}
+    #    SwedbankPay:ApiBaseUrl: https://api.externalintegration.payex.com
+    #    SwedbankPay:Sdk:SampleWebsite:BaseUrl: https://localhost:5001
 
   test_nuget_package:
     runs-on: ubuntu-latest
@@ -113,14 +107,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      name: Checkout
       if: ${{ github.event.workflow_run.event != 'pull_request_target' }}
+      name: Checkout
       with:
         fetch-depth: 0
 
     - uses: actions/checkout@v2
+      if: ${{ github.event.workflow_run.event == 'pull_request_target' }}  
       name: Checkout pull request target
-      if: ${{ github.event.workflow_run.event == 'pull_request_target' }}
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
@@ -187,31 +181,32 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_runt.event != 'pull_request'}}
     needs: [variables, test_nuget_package]
     uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure.yml@develop
-    name: 'Run Azure webapp deploy to ${{ needs.variables.outputs.ENVIRONMENT }} using publish profile credentials'
+    name: 'Deploy to ${{ needs.variables.outputs.ENVIRONMENT }}'
     with:
-      environment: ${{ needs.variables.outputs.ENVIRONMENT }}
+      ENVIRONMENT: ${{ needs.variables.outputs.ENVIRONMENT }}
       packageName: 'Sample.AspNetCore'
     secrets:
       azureWebAppName: ${{ secrets.AZURE_WEBAPP_NAME }}
       azurePublishProfile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
  
-
-
-
-    #steps:
-    ##- name: Checkout
-    ##  uses: actions/checkout@v2
+  publishToNuget:
+    needs: [variables, build, test, test_nuget_package]  
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_runt.event != 'pull_request'}}
+    environment: ${{ needs.variables.outputs.ENVIRONMENT }}   
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
 
     #- name: Download All artifacts
     #  uses: actions/download-artifact@v2
 
-
-   
-
     #- name: Publish to NuGet
     #  if: startsWith(github.ref, 'refs/tags/') # Only publish tagged commits
     #  env:
-    #    SLN_FILE: src/SwedbankPay.Sdk.sln
+    #    SLN_FILE: ${{ env.slnPath }}
     #    VERSION_NUMBER: ${{ needs.variables.outputs.FULLSEMVER }}
     #    NUGET_KEY: ${{ secrets.NUGET_KEY}}
     #    DEBUG: true

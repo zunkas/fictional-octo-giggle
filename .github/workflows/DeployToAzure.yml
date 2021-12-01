@@ -8,9 +8,6 @@ on:
       packageName:
         required: true
         type: string
-      #environmentName:
-      #  required: true
-      #  type: string
     secrets:
       azureWebAppName:
         required: true
