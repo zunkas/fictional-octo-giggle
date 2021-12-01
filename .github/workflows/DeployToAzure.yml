@@ -39,4 +39,4 @@ jobs:
     - name: print stuff2
       run : |
         echo 'printing envs'
-        env
+        env        
