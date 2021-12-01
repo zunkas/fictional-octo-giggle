@@ -24,6 +24,7 @@ jobs:
       FULLSEMVER:  ${{ steps.gitversion.outputs.fullSemVer }}
 
     steps:
+      - uses: haya14busa/action-workflow_run-status@v1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
@@ -66,6 +67,7 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
+    - uses: haya14busa/action-workflow_run-status@v1
     - name: Checkout
       if: ${{ github.event.workflow_run.event != 'pull_request_target' }}  
       uses: actions/checkout@v2
@@ -106,6 +108,7 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
+    - uses: haya14busa/action-workflow_run-status@v1
     - uses: actions/checkout@v2
       if: ${{ github.event.workflow_run.event != 'pull_request_target' }}
       name: Checkout
@@ -197,6 +200,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - uses: haya14busa/action-workflow_run-status@v1
     - name: Checkout
       uses: actions/checkout@v2
 

@@ -20,6 +20,7 @@ jobs:
     environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
+    - uses: haya14busa/action-workflow_run-status@v1
     - name: Download All artifacts
       uses: actions/download-artifact@v2
 
