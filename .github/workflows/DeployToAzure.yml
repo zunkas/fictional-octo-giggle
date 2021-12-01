@@ -39,10 +39,4 @@ jobs:
     - name: print stuff2
       run : |
         echo 'printing envs'
-        env
-
-
-    - name: print stuff3
-      run : |
-        echo 'printing workflow_run ${{ github.event.workflow_run }}'
-        
+        env        
