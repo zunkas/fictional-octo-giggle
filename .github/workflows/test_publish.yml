@@ -16,8 +16,7 @@ jobs:
   variables:
     name: Create variables
     runs-on: ubuntu-latest
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       ENVIRONMENT: ${{ steps.setoutputvariables.outputs.ENVIRONMENT }}
       NUGETVERSIONV2: ${{ steps.gitversion.outputs.nuGetVersionV2 }}
@@ -28,6 +27,12 @@ jobs:
         with:
           fetch-depth: 0
 
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+        
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.11
         with:
@@ -39,13 +44,13 @@ jobs:
 
       - name: Set dev environment variable
         uses: allenevans/set-env@v2.1.0
-        if: ${{ startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/feature/') || startsWith(github.ref, 'refs/heads/dependabot/') || github.event_name == 'pull_request_target' }} # deveop, featurebranches and pullrequests
+        if: ${{ startsWith(github.event.workflow_run.head_branch, 'develop') || startsWith(github.event.workflow_run.head_branch, 'feature/') || startsWith(github.ref, 'refs/heads/dependabot/') || github.event_name == 'pull_request_target' }} # deveop, featurebranches and pullrequests
         with:
           ENVIRONMENT: dev          
 
       - name: Set uat environment variable
         uses: allenevans/set-env@v2.1.0
-        if: ${{ startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/hotfix/') || contains(github.ref, '-beta')}}
+        if: ${{ startsWith(github.event.workflow_run.head_branch, 'release/') || startsWith(github.event.workflow_run.head_branch, 'hotfix/') || contains(github.ref, '-beta')}}
         with:
           ENVIRONMENT: uat
 
@@ -62,10 +67,10 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
+    - uses: haya14busa/action-workflow_run-status@v1
     - name: Checkout
       if: ${{ github.event.workflow_run.event != 'pull_request_target' }}  
       uses: actions/checkout@v2
@@ -106,6 +111,7 @@ jobs:
       ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
+    - uses: haya14busa/action-workflow_run-status@v1
     - uses: actions/checkout@v2
       if: ${{ github.event.workflow_run.event != 'pull_request_target' }}
       name: Checkout
@@ -177,11 +183,9 @@ jobs:
     #  run: dotnet build src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
 
   publish:
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_runt.event != 'pull_request'}}
+    if: ${{ github.event.workflow_run.event == 'push' && (startsWith(github.event.workflow_run.head_branch, 'develop') || startsWith(github.event.workflow_run.head_branch, 'release/') || startsWith(github.event.workflow_run.head_branch, 'hotfix/') || startsWith(github.ref, 'refs/tags/')) }}
     needs: [variables, test]
-    uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure.yml@develop
-    name: 'Deploy to ${{ needs.variables.outputs.ENVIRONMENT }}'
+    uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure.yml@develop    
     with:
       ENVIRONMENT: ${{ needs.variables.outputs.ENVIRONMENT }}
       packageName: 'Sample.AspNetCore'
@@ -190,9 +194,8 @@ jobs:
       azurePublishProfile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
  
   publishToNuget:
-    needs: [variables, test]  
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_runt.event != 'pull_request'}}
+    needs: [variables, test, publish]  
+    if: ${{ github.event.workflow_run.event != 'pull_request' || startsWith(github.ref, 'refs/heads/develop') }}
     environment: ${{ needs.variables.outputs.ENVIRONMENT }}   
     runs-on: ubuntu-latest
     
