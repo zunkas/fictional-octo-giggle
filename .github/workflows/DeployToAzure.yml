@@ -2,6 +2,9 @@ name: deployToAzure
 on:
   workflow_call:
     inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
       packageName:
         required: true
         type: string
@@ -17,6 +20,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
     - name: Download All artifacts
@@ -34,3 +38,8 @@ jobs:
         echo "packageName is  ${{ inputs.packageName }}"
         echo "azureWebAppName is ${{ secrets.azureWebAppName}}"
         echo "azurePublishProfile is ${{ secrets.azurePublishProfile}}"
+
+    - name: print stuff2
+      run : |
+        echo 'printing envs'
+        env
