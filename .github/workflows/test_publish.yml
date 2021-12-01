@@ -28,15 +28,11 @@ jobs:
           fetch-depth: 0
 
 
-      - name: print stuff3
-        uses: actions/github-script@v5
-        with:
-          script: |
-            console.log(${{ github.event.workflow_run }})
-
-
-
-
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+        
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.11
         with:
