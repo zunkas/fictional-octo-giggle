@@ -186,7 +186,7 @@ jobs:
     if: >
       ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_runt.event != 'pull_request'}}
     needs: [variables, test_nuget_package]
-    uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure@main
+    uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure.yml@develop
     name: 'Run Azure webapp deploy to ${{ needs.variables.outputs.ENVIRONMENT }} using publish profile credentials'
     with:
       environment: ${{ needs.variables.outputs.ENVIRONMENT }}
