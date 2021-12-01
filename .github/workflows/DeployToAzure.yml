@@ -2,16 +2,15 @@ name: deployToAzure
 on:
   workflow_call:
     inputs:
-      azureWebAppName:
-        required: true
-        type: string
       packageName:
         required: true
         type: string
-      environmentName:
-        required: true
-        type: string
+      #environmentName:
+      #  required: true
+      #  type: string
     secrets:
+      azureWebAppName:
+        required: true
       azurePublishProfile:
         required: true
 
@@ -23,9 +22,15 @@ jobs:
     - name: Download All artifacts
       uses: actions/download-artifact@v2
 
-    - name: Run Azure webapp deploy to ${{ inputs.environmentName }} using publish profile credentials
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ inputs.AZURE_WEBAPP_NAME }} # Replace with your app name
-        publish-profile: ${{ secrets.azurePublishProfile }} # Define secret variable in repository settings as per action documentation
-        package: ${{ inputs.packageName }}
+    #- name: Run Azure webapp deploy to ${{ inputs.environmentName }} using publish profile credentials
+    #  uses: azure/webapps-deploy@v2
+    #  with:
+    #    app-name: ${{ inputs.AZURE_WEBAPP_NAME }} # Replace with your app name
+    #    publish-profile: ${{ secrets.azurePublishProfile }} # Define secret variable in repository settings as per action documentation
+    #    package: ${{ inputs.packageName }}
+
+    - name: print stuff
+      run: |
+        echo "packageName is  ${{ inputs.packageName }}"
+        echo "azureWebAppName is ${{ secrets.azureWebAppName}}"
+        echo "azurePublishProfile is ${{ secrets.azurePublishProfile}}"
