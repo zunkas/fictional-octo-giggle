@@ -16,8 +16,7 @@ jobs:
   variables:
     name: Create variables
     runs-on: ubuntu-latest
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       ENVIRONMENT: ${{ steps.setoutputvariables.outputs.ENVIRONMENT }}
       NUGETVERSIONV2: ${{ steps.gitversion.outputs.nuGetVersionV2 }}
@@ -62,8 +61,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
     - uses: haya14busa/action-workflow_run-status@v1
@@ -179,8 +177,7 @@ jobs:
     #  run: dotnet build src/SwedbankPay.Sdk.TestNuget/SwedbankPay.Sdk.TestNuget.csproj
 
   publish:
-    if: >
-      ${{ github.event.workflow_run.event != 'pull_request'}}
+    if: ${{ github.event.workflow_run.event != 'pull_request' || startsWith(github.ref, 'refs/heads/develop') }}
     needs: [variables, test]
     uses: zunkas/fictional-octo-giggle/.github/workflows/DeployToAzure.yml@develop
     name: 'Deploy to ${{ needs.variables.outputs.ENVIRONMENT }}'
@@ -193,13 +190,11 @@ jobs:
  
   publishToNuget:
     needs: [variables, test]  
-    if: >
-      ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_runt.event != 'pull_request'}}
+    if: ${{ github.event.workflow_run.event != 'pull_request' || startsWith(github.ref, 'refs/heads/develop') }}
     environment: ${{ needs.variables.outputs.ENVIRONMENT }}   
     runs-on: ubuntu-latest
     
     steps:
-    - uses: haya14busa/action-workflow_run-status@v1
     - name: Checkout
       uses: actions/checkout@v2
 
