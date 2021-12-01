@@ -44,5 +44,5 @@ jobs:
 
     - name: print stuff3
       run : |
-        echo 'printing workflow_run'
-        ${{ github.event.workflow_run }}
+        echo 'printing workflow_run ${{ github.event.workflow_run }}'
+        
