@@ -8,7 +8,7 @@ env:
   AZURE_WEBAPP_PACKAGE_PATH: '.'
   Configuration: Release
   dotnetVersion: '6.x.x'  # SDK Version to use; x will use the latest version of the 6.0 channel
-  slnPath: fictional-octo-giggle.csproj
+  slnPath: src/fictional-octo-giggle.sln
 
 jobs:
   build: 
