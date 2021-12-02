@@ -24,8 +24,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        if: ${{ github.event.workflow_run.event != 'pull_request' }}
+        name: Checkout
         with:
           fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_commit.id }}
+
+      - uses: actions/checkout@v2
+        if: ${{ github.event.workflow_run.event == 'pull_request' }}  
+        name: Checkout pull request target
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_commit.id }}
 
 
       - name: Dump GitHub context
@@ -44,13 +54,13 @@ jobs:
 
       - name: Set dev environment variable
         uses: allenevans/set-env@v2.1.0
-        if: ${{ startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/heads/feature/') || startsWith(github.ref, 'refs/heads/dependabot/') || github.event_name == 'pull_request_target' }} # deveop, featurebranches and pullrequests
+        if: ${{ startsWith(github.event.workflow_run.head_branch, 'develop') || startsWith(github.event.workflow_run.head_branch, 'feature/') || startsWith(github.ref, 'refs/heads/dependabot/') || github.event_name == 'pull_request_target' }} # deveop, featurebranches and pullrequests
         with:
           ENVIRONMENT: dev          
 
       - name: Set uat environment variable
         uses: allenevans/set-env@v2.1.0
-        if: ${{ startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/hotfix/') || contains(github.ref, '-beta')}}
+        if: ${{ startsWith(github.event.workflow_run.head_branch, 'release/') || startsWith(github.event.workflow_run.head_branch, 'hotfix/') || contains(github.ref, '-beta')}}
         with:
           ENVIRONMENT: uat
 
@@ -71,15 +81,20 @@ jobs:
 
     steps:
     - uses: haya14busa/action-workflow_run-status@v1
-    - name: Checkout
-      if: ${{ github.event.workflow_run.event != 'pull_request_target' }}  
-      uses: actions/checkout@v2
-      
-    - name: Checkout pull request target
-      if: ${{ github.event.workflow_run.event == 'pull_request_target' }}  
-      uses: actions/checkout@v2
+
+    - uses: actions/checkout@v2
+      if: ${{ github.event.workflow_run.event != 'pull_request' }}
+      name: Checkout
       with:
-        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+
+    - uses: actions/checkout@v2
+      if: ${{ github.event.workflow_run.event == 'pull_request' }}  
+      name: Checkout pull request target
+      with:
+        fetch-depth: 0
+        ref: ${{ github.event.workflow_run.head_sha }}
+
 
     - uses: actions/setup-dotnet@v1
       with:
@@ -113,17 +128,17 @@ jobs:
     steps:
     - uses: haya14busa/action-workflow_run-status@v1
     - uses: actions/checkout@v2
-      if: ${{ github.event.workflow_run.event != 'pull_request_target' }}
+      if: ${{ github.event.workflow_run.event != 'pull_request' }}
       name: Checkout
       with:
         fetch-depth: 0
 
     - uses: actions/checkout@v2
-      if: ${{ github.event.workflow_run.event == 'pull_request_target' }}  
+      if: ${{ github.event.workflow_run.event == 'pull_request' }}  
       name: Checkout pull request target
       with:
         fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.sha }}
+        ref: ${{ github.event.workflow_run.head_sha }}
 
     - uses: gittools/actions/gitversion/setup@v0.9.11
       with:
